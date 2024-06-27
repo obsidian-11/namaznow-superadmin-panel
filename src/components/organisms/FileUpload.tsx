@@ -222,9 +222,7 @@ const FileUpload: React.FC = () => {
               onChange={(e) => setSelectedSchoolOfThought(e.target.value)}
             >
               <option value="HANAFI">HANAFI</option>
-              <option value="HANBALI">HANBALI</option>
-              <option value="MALIKI">MALIKI</option>
-              <option value="SHAFI">SHAFI</option>
+              <option value="SHAFIEE">SHAFIEE</option>
             </Select>
           </FormControl>
           <FormControl id="file-upload" mt={4}>
