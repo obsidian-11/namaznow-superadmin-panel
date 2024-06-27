@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import * as XLSX from "xlsx";
 import axios from "axios";
+import qs from "qs";
 import {
   Box,
   Button,
@@ -9,7 +10,7 @@ import {
   Input,
   Select,
   useToast,
-  Spinner, // Import Spinner from Chakra UI
+  Spinner,
 } from "@chakra-ui/react";
 import { STRAPI_AUTH_TOKEN, STRAPI_BASE_URL } from "../../config/appconfig";
 
@@ -25,15 +26,24 @@ interface PrayerTimes {
   };
 }
 
+interface ILocation {
+  id: number;
+  name: string;
+  timings: [];
+}
+
 const FileUpload: React.FC = () => {
   const [jsonData, setJsonData] = useState<PrayerTimes>({});
-  const [locations, setLocations] = useState<string[]>([]);
-  const [selectedLocation, setSelectedLocation] = useState<string>("");
-  const [loadingLocations, setLoadingLocations] = useState<boolean>(true); // State for loading indicator
+  const [locations, setLocations] = useState<ILocation[]>([]);
+  const [selectedLocation, setSelectedLocation] = useState<number>();
+  const [loadingLocations, setLoadingLocations] = useState<boolean>(true);
+  const [selectedSchoolOfThought, setSelectedSchoolOfThought] =
+    useState<string>("");
   const toast = useToast();
 
   useEffect(() => {
-    // Fetch locations from Strapi
+    let isMounted = true;
+
     const fetchLocations = async () => {
       try {
         const response = await axios.get(`${STRAPI_BASE_URL}/api/locations`, {
@@ -41,24 +51,35 @@ const FileUpload: React.FC = () => {
             Authorization: `Bearer ${STRAPI_AUTH_TOKEN}`,
           },
         });
-        console.log("res", response);
 
-        setLocations(
-          response.data.data.map((location: any) => location.attributes.name)
-        );
-        setLoadingLocations(false); // Update state to indicate loading is complete
+        if (isMounted) {
+          setLocations(
+            response.data.data.map((location: any) => ({
+              id: location.id,
+              name: location.attributes.name,
+            }))
+          );
+          setLoadingLocations(false);
+        }
       } catch (error) {
-        toast({
-          title: "Error fetching locations.",
-          description: "Unable to fetch locations from the server.",
-          status: "error",
-          duration: 5000,
-          isClosable: true,
-        });
-        setLoadingLocations(false); // Ensure loading state is turned off in case of error
+        if (isMounted) {
+          toast({
+            title: "Error fetching locations.",
+            description: "Unable to fetch locations from the server.",
+            status: "error",
+            duration: 5000,
+            isClosable: true,
+          });
+          setLoadingLocations(false);
+        }
       }
     };
+
     fetchLocations();
+
+    return () => {
+      isMounted = false;
+    };
   }, [toast]);
 
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -98,11 +119,22 @@ const FileUpload: React.FC = () => {
     return formattedJSON;
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!selectedLocation) {
       toast({
         title: "Location not selected.",
         description: "Please select a location before submitting.",
+        status: "error",
+        duration: 5000,
+        isClosable: true,
+      });
+      return;
+    }
+
+    if (!selectedSchoolOfThought) {
+      toast({
+        title: "School of Thought not selected.",
+        description: "Please select a School of Thought before submitting.",
         status: "error",
         duration: 5000,
         isClosable: true,
@@ -121,20 +153,45 @@ const FileUpload: React.FC = () => {
       return;
     }
 
-    // Handle form submission logic here
-    console.log("Submitting data:", {
-      location: selectedLocation,
-      data: jsonData,
-    });
-    // Reset form
-    setJsonData({});
-    setSelectedLocation("");
-    toast({
-      title: "Data submitted successfully.",
-      status: "success",
-      duration: 5000,
-      isClosable: true,
-    });
+    try {
+      const response = await axios.post(
+        `${STRAPI_BASE_URL}/api/timing/importTimings`,
+
+        {
+          prayerTimings: jsonData,
+          locationId: selectedLocation,
+          schoolOfThought: selectedSchoolOfThought,
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${STRAPI_AUTH_TOKEN}`,
+          },
+        }
+      );
+
+      console.log("res ==", response);
+
+      toast({
+        title: "Data submitted successfully.",
+        status: "success",
+        duration: 5000,
+        isClosable: true,
+      });
+
+      // Reset form
+      // setJsonData({});
+      // setSelectedLocation(undefined);
+      // setSelectedSchoolOfThought("");
+    } catch (error) {
+      toast({
+        title: "Error submitting data.",
+        description: "An error occurred while submitting the data.",
+        status: "error",
+        duration: 5000,
+        isClosable: true,
+      });
+      console.error("Error submitting data:", error);
+    }
   };
 
   return (
@@ -148,13 +205,26 @@ const FileUpload: React.FC = () => {
             <Select
               placeholder="Select location"
               value={selectedLocation}
-              onChange={(e) => setSelectedLocation(e.target.value)}
+              onChange={(e) => setSelectedLocation(Number(e.target.value))}
             >
               {locations.map((location) => (
-                <option key={location} value={location}>
-                  {location}
+                <option key={location.id} value={location.id}>
+                  {location.name}
                 </option>
               ))}
+            </Select>
+          </FormControl>
+          <FormControl id="school-of-thought" mt={4}>
+            <FormLabel>Select School of Thought</FormLabel>
+            <Select
+              placeholder="Select School of Thought"
+              value={selectedSchoolOfThought}
+              onChange={(e) => setSelectedSchoolOfThought(e.target.value)}
+            >
+              <option value="HANAFI">HANAFI</option>
+              <option value="HANBALI">HANBALI</option>
+              <option value="MALIKI">MALIKI</option>
+              <option value="SHAFI">SHAFI</option>
             </Select>
           </FormControl>
           <FormControl id="file-upload" mt={4}>
@@ -171,9 +241,6 @@ const FileUpload: React.FC = () => {
           </Button>
         </>
       )}
-      {/* <pre style={{ fontSize: 12, marginTop: 16 }}>
-        {JSON.stringify(jsonData, null, 2)}
-      </pre> */}
     </Box>
   );
 };
