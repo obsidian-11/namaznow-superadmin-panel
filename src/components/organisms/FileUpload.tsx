@@ -179,9 +179,9 @@ const FileUpload: React.FC = () => {
       });
 
       // Reset form
-      // setJsonData({});
-      // setSelectedLocation(undefined);
-      // setSelectedSchoolOfThought("");
+      setJsonData({});
+      setSelectedLocation(undefined);
+      setSelectedSchoolOfThought("");
     } catch (error) {
       toast({
         title: "Error submitting data.",
