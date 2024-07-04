@@ -7,7 +7,7 @@ const App: React.FC = () => {
     <ChakraProvider>
       <div className="App">
         <header className="App-header">
-          <Heading py="10">Import Prayer Times</Heading>
+          <Heading py="10">NamazNow Timings Import</Heading>
           <FileUpload />
         </header>
       </div>
