@@ -109,7 +109,7 @@ const FileUpload: React.FC = () => {
       formattedJSON[dateKey] = {
         fajr: row["Fajr/SehriEND"],
         sunrise: row["Tulu' START"],
-        zawaal_start: row["ZawaalSTART"],
+        zawaal_start: row["ZawaalSTART "] || row["ZawaalSTART"],
         dhuhr: row["Dhuhur/ZawaalEND"],
         asr: row.Asr,
         maghrib: row["Maghrib/GhurubEND/Iftaar"],
