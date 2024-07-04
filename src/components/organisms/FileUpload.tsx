@@ -234,7 +234,7 @@ const FileUpload: React.FC = () => {
               onChange={handleFileUpload}
             />
           </FormControl>
-          <Button w="100%" mt={8} colorScheme="blue" onClick={handleSubmit}>
+          <Button w="100%" mt={8} colorScheme="green" onClick={handleSubmit}>
             Submit
           </Button>
         </>
