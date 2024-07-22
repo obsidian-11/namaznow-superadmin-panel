@@ -1,5 +1,5 @@
 import React from "react";
-import { ChakraProvider, Heading } from "@chakra-ui/react";
+import { ChakraProvider, Flex, Heading, Image } from "@chakra-ui/react";
 import FileUpload from "./components/organisms/FileUpload";
 
 const App: React.FC = () => {
@@ -7,7 +7,11 @@ const App: React.FC = () => {
     <ChakraProvider>
       <div className="App">
         <header className="App-header">
-          <Heading py="10">NamazNow Timings Import</Heading>
+          <Flex align="center">
+            <Image w="80px" h="80px" src="icon.png" />
+            <Heading py="10">NamazNow Timings Import</Heading>
+          </Flex>
+
           <FileUpload />
         </header>
       </div>
